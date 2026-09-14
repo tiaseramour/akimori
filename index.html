@@ -1,0 +1,900 @@
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>♡ Sweet Shop ♡</title>
+
+  <!-- ฟอนต์ไทยสไตล์น่ารักญี่ปุ่น -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --pink:#f39abc;
+      --pink2:#ffd9e7;
+      --pink3:#fff3f8;
+      --cream:#fffafc;
+      --text:#66565e;
+      --muted:#a8949d;
+      --white:#fff;
+      --line:#f1dfe7;
+      --shadow:0 8px 25px rgba(185,120,145,.12);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box;font-family:"Mali",sans-serif}
+    body{
+      margin:0;
+      background:linear-gradient(135deg,#fffafe,#fff4f8 55%,#fffdf8);
+      color:var(--text);
+      min-height:100vh;
+    }
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    img{max-width:100%;display:block}
+
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      margin:14px;
+      padding:12px 16px;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(12px);
+      border:1px solid #f7e7ee;
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      display:flex;align-items:center;gap:12px;
+    }
+    .avatar{
+      width:50px;height:50px;border-radius:50%;object-fit:cover;
+      background:var(--pink3);border:2px solid var(--pink2);
+    }
+    .shop-title{font-weight:700;color:#d879a0;font-size:18px}
+    .shop-bio{font-size:11px;color:var(--muted)}
+    .top-spacer{flex:1}
+
+    .menu-btn{
+      width:46px;height:46px;border:0;background:#fff1f6;
+      border-radius:16px;color:#d97e9f;font-size:24px;
+      display:grid;place-items:center;
+    }
+
+    .search-wrap{padding:0 14px 8px}
+    .search{
+      width:100%;border:1px solid #f4e1e9;background:#fff;
+      border-radius:18px;padding:13px 16px;outline:none;
+      color:var(--text);box-shadow:var(--shadow);
+    }
+    .categories{
+      display:flex;gap:8px;overflow:auto;padding:0 14px 14px;
+      scrollbar-width:none;
+    }
+    .categories::-webkit-scrollbar{display:none}
+    .cat{
+      white-space:nowrap;border:1px solid #f2dce6;background:#fff;
+      color:#9c7d8b;border-radius:999px;padding:8px 13px;
+    }
+    .cat.active{background:#f49bbe;color:#fff;border-color:#f49bbe}
+
+    main{padding:0 14px 110px}
+    .hero{
+      background:linear-gradient(135deg,#ffe5ef,#fff7fb);
+      border:1px solid #f6dce6;border-radius:26px;padding:18px;
+      margin-bottom:15px;
+      box-shadow:var(--shadow);
+    }
+    .hero h1{margin:0;color:#d8749c;font-size:25px}
+    .hero p{margin:4px 0 0;color:#a98996;font-size:13px}
+
+    .grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:13px;
+    }
+    .product{
+      background:#fff;border:1px solid #f4e2e9;border-radius:22px;
+      padding:10px;box-shadow:var(--shadow);overflow:hidden;
+    }
+    .product-img{
+      width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:17px;
+      background:#fff4f8;
+    }
+    .product-name{font-weight:600;margin:9px 4px 3px}
+    .product-cat{font-size:11px;color:#b18e9c;margin:0 4px}
+    .product-bottom{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+    .price{color:#df769f;font-weight:700}
+    .add-btn{
+      border:0;background:#f6a4c3;color:#fff;border-radius:13px;
+      padding:8px 11px;font-weight:600;
+    }
+
+    .cart-fab{
+      position:fixed;right:18px;bottom:20px;z-index:60;
+      width:64px;height:64px;border-radius:50%;border:0;
+      background:#f49bbe;color:#fff;font-size:25px;
+      box-shadow:0 10px 25px rgba(217,116,153,.3);
+    }
+    .cart-count{
+      position:absolute;right:-2px;top:-3px;
+      min-width:23px;height:23px;padding:0 5px;border-radius:99px;
+      background:#d76c96;color:#fff;font-size:12px;display:grid;place-items:center;
+    }
+
+    .drawer{
+      position:fixed;inset:0;z-index:100;background:rgba(70,45,55,.28);
+      opacity:0;pointer-events:none;transition:.25s;
+    }
+    .drawer.show{opacity:1;pointer-events:auto}
+    .drawer-panel{
+      position:absolute;right:0;top:0;height:100%;width:min(370px,92vw);
+      background:#fffafd;border-radius:28px 0 0 28px;padding:22px;
+      box-shadow:-10px 0 35px rgba(100,60,75,.12);
+      transform:translateX(100%);transition:.25s;overflow:auto;
+    }
+    .drawer.show .drawer-panel{transform:translateX(0)}
+    .drawer-head{display:flex;align-items:center;justify-content:space-between}
+    .close{
+      width:40px;height:40px;border:0;border-radius:14px;background:#fff0f6;
+      color:#d77d9f;font-size:20px;
+    }
+    .menu-item{
+      width:100%;border:1px solid #f1dfe7;background:#fff;
+      border-radius:18px;padding:14px;margin-top:10px;text-align:left;
+      color:var(--text);font-weight:600;
+    }
+    .menu-item:hover{background:#fff2f7}
+
+    .setting-list{display:none;margin:5px 0 8px 12px}
+    .setting-list.show{display:block}
+    .sub-item{
+      width:100%;border:0;background:#fff4f8;border-radius:14px;
+      padding:11px;text-align:left;margin-top:7px;color:#9b7485;
+    }
+
+    .modal{
+      position:fixed;inset:0;z-index:200;background:rgba(65,42,51,.4);
+      backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;
+      padding:15px;
+    }
+    .modal.show{display:flex}
+    .modal-box{
+      width:min(560px,100%);max-height:92vh;overflow:auto;
+      background:#fff;border-radius:28px;padding:22px;
+      box-shadow:0 20px 60px rgba(75,45,58,.2);
+    }
+    .modal-title{color:#d9789f;margin-top:0}
+    .field{margin:10px 0}
+    .field label{display:block;font-size:12px;color:#9e7f8d;margin:0 0 5px 4px}
+    .field input,.field textarea,.field select{
+      width:100%;border:1px solid #efdce5;background:#fff8fb;
+      border-radius:15px;padding:11px;outline:none;color:var(--text);
+    }
+    .field textarea{min-height:80px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
+    .btn{
+      border:0;border-radius:15px;padding:11px 16px;font-weight:600;
+    }
+    .btn.primary{background:#f39abc;color:#fff}
+    .btn.soft{background:#fff0f6;color:#cf7397}
+    .btn.danger{background:#ffe8ee;color:#c55d7d}
+
+    .cart-list{display:grid;gap:9px}
+    .cart-item{
+      display:grid;grid-template-columns:60px 1fr auto;gap:10px;align-items:center;
+      padding:10px;background:#fff7fa;border-radius:18px;border:1px solid #f2e0e8;
+    }
+    .cart-item img{width:60px;height:60px;border-radius:14px;object-fit:cover}
+    .qty{display:flex;align-items:center;gap:6px;margin-top:4px}
+    .qty button{
+      border:0;width:27px;height:27px;border-radius:9px;background:#fff;
+      color:#d77c9e;
+    }
+    .total-box{
+      margin-top:15px;padding:15px;background:#fff2f7;border-radius:20px;
+      border:1px solid #f4dce6;
+    }
+    .total-line{display:flex;justify-content:space-between;margin:5px 0}
+    .grand{font-size:18px;color:#d9709b;font-weight:700}
+
+    .payment-card{
+      padding:13px;border:1px solid #f0dfe7;border-radius:17px;
+      margin:8px 0;background:#fffafd;
+    }
+    .payment-card strong{color:#d77c9d}
+    .copy-btn{float:right;border:0;background:#fff0f5;color:#d4779b;border-radius:10px;padding:7px}
+    .qr{
+      width:180px;height:180px;object-fit:contain;margin:12px auto;
+      border-radius:16px;border:1px solid #eadce2;background:#fff;
+    }
+
+    .receipt-overlay{
+      position:fixed;inset:0;z-index:400;background:rgba(60,45,52,.5);
+      backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;
+    }
+    .receipt-overlay.show{display:flex}
+    .printer-wrap{width:330px;text-align:center;color:#fff}
+    .printer{
+      position:relative;width:260px;height:145px;margin:auto;
+      background:#eee9ec;border-radius:22px;
+      box-shadow:0 20px 45px rgba(40,25,35,.25);padding-top:35px;
+    }
+    .printer-top{
+      position:absolute;top:15px;left:25px;right:25px;height:30px;
+      background:#d4ced2;border-radius:10px;
+    }
+    .printer-slot{
+      position:absolute;top:67px;left:33px;right:33px;height:12px;
+      background:#7d777b;border-radius:8px;z-index:2;
+    }
+    .paper{
+      position:absolute;left:50%;transform:translateX(-50%);
+      top:66px;width:190px;height:0;overflow:hidden;background:#fff;color:#777;
+      padding:15px;border-radius:3px;z-index:1;text-align:left;
+      box-shadow:0 4px 12px rgba(0,0,0,.12);
+    }
+    .printing .paper{animation:print 4s ease-out forwards}
+    @keyframes print{
+      0%{height:0}
+      30%{height:80px}
+      60%{height:180px}
+      100%{height:275px}
+    }
+    .paper-logo{text-align:center;color:#db82a5;font-size:16px;font-weight:700}
+    .paper-line{border-top:1px dashed #bbb;margin:7px 0}
+    .paper-total{display:flex;justify-content:space-between;font-weight:700}
+    .print-status{margin-top:30px;font-weight:700}
+    .done{display:none;margin-top:28px;font-weight:700}
+    .finished .print-status,.finished .print-sub{display:none}
+    .finished .done{display:block}
+
+    .order{
+      border:1px solid #f0dfe7;border-radius:18px;padding:12px;margin:8px 0;background:#fff;
+    }
+    .order-head{display:flex;justify-content:space-between;gap:8px}
+    .status{font-size:11px;padding:5px 8px;border-radius:99px;background:#fff0f5;color:#d27899}
+    .order-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+    .empty{text-align:center;color:#b39da6;padding:30px 5px}
+
+    @media(max-width:600px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .row{grid-template-columns:1fr}
+      .hero h1{font-size:21px}
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <img id="shopAvatar" class="avatar" src="" alt="ร้าน">
+  <div>
+    <div id="shopName" class="shop-title">♡ Sweet Bunny Shop ♡</div>
+    <div id="shopBio" class="shop-bio">Thank you for your support ♡</div>
+  </div>
+  <div class="top-spacer"></div>
+  <button class="menu-btn" onclick="openMenu()" aria-label="เมนู">☰</button>
+</header>
+
+<div class="search-wrap">
+  <input id="search" class="search" placeholder="ค้นหาสินค้า..." oninput="renderProducts()">
+</div>
+<div id="categories" class="categories"></div>
+
+<main>
+  <section class="hero">
+    <h1 id="heroTitle">♡ ยินดีต้อนรับสู่ร้านของเรา ♡</h1>
+    <p id="heroBio">เลือกของที่ชอบ แล้วใส่ตะกร้าได้เลยนะ ✿</p>
+  </section>
+  <div id="productGrid" class="grid"></div>
+</main>
+
+<button class="cart-fab" onclick="openCart()" aria-label="ตะกร้า">
+  🛒
+  <span id="cartCount" class="cart-count">0</span>
+</button>
+
+<!-- เมนูสามขีด -->
+<div id="drawer" class="drawer" onclick="drawerBackdrop(event)">
+  <aside class="drawer-panel">
+    <div class="drawer-head">
+      <h2 style="color:#d9799f;margin:0">☰ เมนู</h2>
+      <button class="close" onclick="closeMenu()">×</button>
+    </div>
+
+    <button class="menu-item" onclick="showContact()">♡ ติดต่อแอดมิน</button>
+
+    <button class="menu-item" onclick="toggleSettings()">⚙️ ตั้งค่าเว็บ　⌄</button>
+
+    <div id="settingList" class="setting-list">
+      <button class="sub-item" onclick="adminGate('shop')">➡️ จัดการร้าน</button>
+      <button class="sub-item" onclick="adminGate('product')">➡️ เพิ่มสินค้า</button>
+    </div>
+
+    <button class="menu-item" onclick="adminGate('orders')">🧾 จัดการออเดอร์</button>
+  </aside>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal" onclick="modalBackdrop(event)">
+  <div id="modalBox" class="modal-box"></div>
+</div>
+
+<!-- Receipt animation -->
+<div id="receiptOverlay" class="receipt-overlay">
+  <div id="printerWrap" class="printer-wrap">
+    <div class="printer">
+      <div class="printer-top"></div>
+      <div class="printer-slot"></div>
+      <div id="paper" class="paper"></div>
+    </div>
+    <div class="print-status">กำลังปริ้นใบเสร็จ... ♡</div>
+    <div class="print-sub" style="font-size:12px;color:#ffe8f0;margin-top:6px">กรุณารอสักครู่นะ</div>
+    <div class="done">
+      ♡ ปริ้นใบเสร็จเรียบร้อย ♡<br>
+      <button class="btn primary" style="margin-top:12px" onclick="finishReceipt()">ดูใบเสร็จ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const defaultShop = {
+    name:"♡ Sweet Bunny Shop ♡",
+    bio:"Thank you for your support ♡",
+    avatar:"",
+    bank:"K Bank",
+    account:"000-0-00000-0",
+    accountName:"ชื่อบัญชีร้าน",
+    wallet:"@yourwallet",
+    qr:""
+  };
+
+  const defaultProducts = [
+    {id:1,name:"เมนูตัวอย่าง",price:199,category:"กลุ่มของแต่ง",image:"",description:"สินค้าตัวอย่างน่ารัก ๆ ♡"}
+  ];
+
+  let shop = JSON.parse(localStorage.getItem("shopData") || "null") || defaultShop;
+  let products = JSON.parse(localStorage.getItem("products") || "null") || defaultProducts;
+  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  let lastReceiptOrder = null;
+
+  function saveAll(){
+    localStorage.setItem("shopData",JSON.stringify(shop));
+    localStorage.setItem("products",JSON.stringify(products));
+    localStorage.setItem("cart",JSON.stringify(cart));
+    localStorage.setItem("orders",JSON.stringify(orders));
+  }
+
+  function escapeHTML(value){
+    return String(value ?? "").replace(/[&<>"']/g,m=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function placeholder(text="♡"){
+    return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500">
+        <rect width="100%" height="100%" fill="#fff1f6"/>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+          font-size="90" fill="#e9a1bc">${text}</text>
+      </svg>`);
+  }
+
+  function init(){
+    document.getElementById("shopName").textContent=shop.name;
+    document.getElementById("shopBio").textContent=shop.bio;
+    document.getElementById("heroTitle").textContent=shop.name;
+    document.getElementById("heroBio").textContent=shop.bio;
+    document.getElementById("shopAvatar").src=shop.avatar || placeholder("♡");
+    renderCategories();
+    renderProducts();
+    updateCartCount();
+  }
+
+  function renderCategories(){
+    const cats=["ทั้งหมด",...new Set(products.map(p=>p.category).filter(Boolean))];
+    document.getElementById("categories").innerHTML=cats.map((c,i)=>
+      `<button class="cat ${i===0?"active":""}" onclick="filterCategory('${escapeHTML(c)}',this)">
+        ${i===0?"♡ ":""}${escapeHTML(c)}
+      </button>`).join("");
+  }
+
+  let currentCategory="ทั้งหมด";
+  function filterCategory(cat,el){
+    currentCategory=cat;
+    document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
+    el.classList.add("active");
+    renderProducts();
+  }
+
+  function renderProducts(){
+    const q=document.getElementById("search").value.toLowerCase().trim();
+    const list=products.filter(p=>
+      (currentCategory==="ทั้งหมด" || p.category===currentCategory) &&
+      (!q || p.name.toLowerCase().includes(q) || String(p.category).toLowerCase().includes(q))
+    );
+
+    document.getElementById("productGrid").innerHTML=list.length ? list.map(p=>`
+      <article class="product">
+        <img class="product-img" src="${p.image || placeholder("♡")}" alt="">
+        <div class="product-name">${escapeHTML(p.name)}</div>
+        <div class="product-cat">${escapeHTML(p.category)}</div>
+        <div class="product-bottom">
+          <span class="price">฿${Number(p.price).toLocaleString()}</span>
+          <button class="add-btn" onclick="addToCart(${p.id})">＋ ใส่ตะกร้า</button>
+        </div>
+      </article>`).join("") :
+      `<div class="empty" style="grid-column:1/-1">ยังไม่มีสินค้านะ ♡</div>`;
+  }
+
+  function addToCart(id){
+    const p=products.find(x=>x.id===id);
+    if(!p)return;
+    const item=cart.find(x=>x.id===id);
+    if(item)item.qty++;
+    else cart.push({id:p.id,qty:1});
+    saveAll(); updateCartCount();
+  }
+
+  function updateCartCount(){
+    document.getElementById("cartCount").textContent=cart.reduce((s,x)=>s+x.qty,0);
+  }
+
+  function cartTotal(){
+    return cart.reduce((s,x)=>{
+      const p=products.find(p=>p.id===x.id);
+      return s+(p?p.price*x.qty:0);
+    },0);
+  }
+
+  function openCart(){
+    const rows=cart.map((x,index)=>{
+      const p=products.find(p=>p.id===x.id);
+      if(!p)return "";
+      return `
+        <div class="cart-item">
+          <img src="${p.image || placeholder("♡")}" alt="">
+          <div>
+            <strong>${escapeHTML(p.name)}</strong>
+            <div style="font-size:12px;color:#a88f99">฿${Number(p.price).toLocaleString()} / ชิ้น</div>
+            <div class="qty">
+              <button onclick="changeQty(${index},-1)">−</button>
+              <span>${x.qty}</span>
+              <button onclick="changeQty(${index},1)">＋</button>
+              <button class="btn danger" style="padding:5px 8px;margin-left:4px" onclick="removeCart(${index})">ลบ</button>
+            </div>
+          </div>
+          <strong style="color:#dc769e">฿${(p.price*x.qty).toLocaleString()}</strong>
+        </div>`;
+    }).join("");
+
+    openModal(`
+      <h2 class="modal-title">🛒 ตะกร้าของฉัน</h2>
+      <div class="cart-list">${rows || '<div class="empty">ยังไม่มีสินค้าในตะกร้า ♡</div>'}</div>
+      ${cart.length ? `
+        <div class="total-box">
+          <div class="total-line"><span>ยอดสินค้า</span><strong>฿${cartTotal().toLocaleString()}</strong></div>
+          <div class="total-line"><span>ค่าส่ง</span><strong>฿0</strong></div>
+          <hr style="border:0;border-top:1px dashed #e9d8df">
+          <div class="total-line grand"><span>รวมทั้งหมด</span><span>฿${cartTotal().toLocaleString()}</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn soft" onclick="closeModal()">เลือกของต่อ</button>
+          <button class="btn primary" onclick="openCheckout()">ไปชำระเงิน ♡</button>
+        </div>`:""}
+    `);
+  }
+
+  function changeQty(index,delta){
+    cart[index].qty+=delta;
+    if(cart[index].qty<=0)cart.splice(index,1);
+    saveAll();updateCartCount();openCart();
+  }
+  function removeCart(index){
+    cart.splice(index,1);saveAll();updateCartCount();openCart();
+  }
+
+  function openCheckout(){
+    if(!cart.length)return;
+    openModal(`
+      <h2 class="modal-title">💳 ชำระเงิน</h2>
+      <p style="font-size:13px;color:#9d858f">ยอดที่ต้องชำระ <b style="color:#d9769d">฿${cartTotal().toLocaleString()}</b></p>
+
+      <div class="payment-card">
+        <strong>🏦 ${escapeHTML(shop.bank)}</strong>
+        <button class="copy-btn" onclick="copyText('${escapeHTML(shop.account)}')">คัดลอก</button>
+        <div>${escapeHTML(shop.account)}</div>
+        <div>${escapeHTML(shop.accountName)}</div>
+      </div>
+
+      <div class="payment-card">
+        <strong>🧡 TrueMoney Wallet</strong>
+        <button class="copy-btn" onclick="copyText('${escapeHTML(shop.wallet)}')">คัดลอก</button>
+        <div>${escapeHTML(shop.wallet)}</div>
+      </div>
+
+      ${shop.qr ? `<div style="text-align:center"><div style="font-weight:600;color:#aa8995">หรือสแกน QR Code</div><img class="qr" src="${shop.qr}" alt="QR"></div>` : `
+        <div class="payment-card" style="text-align:center;color:#ad929d">
+          ยังไม่ได้เพิ่ม QR ร้าน<br><small>แอดมินสามารถเพิ่มได้ที่ ตั้งค่าเว็บ → จัดการร้าน</small>
+        </div>`}
+
+      <div class="field">
+        <label>แนบสลิปการโอนเงิน *</label>
+        <input id="slipFile" type="file" accept="image/*">
+      </div>
+      <div class="field">
+        <label>หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+        <textarea id="orderNote" placeholder="เช่น ขอแพ็กแยก / ข้อความเพิ่มเติม"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn soft" onclick="openCart()">กลับ</button>
+        <button class="btn primary" onclick="submitOrder()">โอนแล้ว ส่งสลิป ♡</button>
+      </div>
+    `);
+  }
+
+  function copyText(t){
+    navigator.clipboard?.writeText(t);
+    alert("คัดลอกแล้ว ♡");
+  }
+
+  function submitOrder(){
+    const file=document.getElementById("slipFile").files[0];
+    if(!file){alert("กรุณาแนบสลิปก่อนนะ ♡");return}
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const id="ORD-"+Date.now();
+      const order={
+        id,
+        items:cart.map(x=>({id:x.id,qty:x.qty})),
+        total:cartTotal(),
+        note:document.getElementById("orderNote").value,
+        slip:reader.result,
+        status:"รอตรวจสอบสลิป",
+        createdAt:new Date().toLocaleString("th-TH")
+      };
+      orders.push(order);
+      cart=[];
+      saveAll();updateCartCount();closeModal();
+      openModal(`
+        <div style="text-align:center;padding:12px">
+          <div style="font-size:55px">🧾</div>
+          <h2 class="modal-title">ส่งสลิปเรียบร้อย ♡</h2>
+          <p>เลขที่คำสั่งซื้อ</p>
+          <strong>${id}</strong>
+          <div class="payment-card" style="margin-top:18px">⏳ รอแอดมินตรวจสอบสลิป</div>
+          <p style="font-size:12px;color:#aa929b">เมื่อแอดมินกดยืนยัน ระบบจะแสดง Animation ใบเสร็จปริ้นออกมา</p>
+          <button class="btn soft" onclick="closeModal()">ปิด</button>
+        </div>`);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function openMenu(){document.getElementById("drawer").classList.add("show")}
+  function closeMenu(){document.getElementById("drawer").classList.remove("show")}
+  function drawerBackdrop(e){if(e.target.id==="drawer")closeMenu()}
+  function toggleSettings(){document.getElementById("settingList").classList.toggle("show")}
+  function openModal(html){document.getElementById("modalBox").innerHTML=html;document.getElementById("modal").classList.add("show")}
+  function closeModal(){document.getElementById("modal").classList.remove("show")}
+  function modalBackdrop(e){if(e.target.id==="modal")closeModal()}
+
+  function showContact(){
+    openModal(`
+      <h2 class="modal-title">♡ ติดต่อแอดมิน</h2>
+      <div class="payment-card">
+        <strong>ช่องทางติดต่อ</strong>
+        <p style="margin-bottom:0">Instagram: @yourshop</p>
+        <p style="margin-bottom:0">LINE: @yourshop</p>
+      </div>
+      <button class="btn soft" onclick="closeModal()">ปิด</button>
+    `);
+  }
+
+  function adminGate(action){
+    closeMenu();
+    const setupAt=localStorage.getItem("adminSetupAt");
+    const password=localStorage.getItem("adminPassword");
+
+    if(!password){
+      if(!setupAt){
+        localStorage.setItem("adminSetupAt",Date.now().toString());
+        return openModal(`
+          <h2 class="modal-title">🔐 ตั้งรหัสผ่านแอดมิน</h2>
+          <p style="font-size:13px">ตั้งรหัสผ่านภายใน 3 วันหลังจากสร้างเว็บเสร็จ เพื่อป้องกันคนอื่นแก้ร้าน</p>
+          <div class="field"><label>รหัสผ่านใหม่</label><input id="newPass" type="password" placeholder="อย่างน้อย 6 ตัว"></div>
+          <div class="field"><label>ยืนยันรหัสผ่าน</label><input id="newPass2" type="password"></div>
+          <div class="btn-row"><button class="btn primary" onclick="setAdminPassword()">บันทึกรหัสผ่าน ♡</button></div>
+        `);
+      }
+      const elapsed=Date.now()-Number(setupAt);
+      if(elapsed<=3*24*60*60*1000){
+        return openModal(`
+          <h2 class="modal-title">🔐 ตั้งรหัสผ่านแอดมิน</h2>
+          <p>คุณยังอยู่ในช่วง 3 วันสำหรับตั้งรหัสผ่าน</p>
+          <div class="field"><label>รหัสผ่านใหม่</label><input id="newPass" type="password"></div>
+          <div class="field"><label>ยืนยันรหัสผ่าน</label><input id="newPass2" type="password"></div>
+          <div class="btn-row"><button class="btn primary" onclick="setAdminPassword()">ตั้งรหัสผ่าน</button></div>
+        `);
+      }
+      return alert("หมดเวลาตั้งรหัสผ่าน 3 วันแล้ว กรุณาตั้งค่าผ่านระบบหลังบ้านจริง");
+    }
+
+    openModal(`
+      <h2 class="modal-title">🔒 สำหรับแอดมิน</h2>
+      <div class="field"><label>รหัสผ่าน</label><input id="adminPass" type="password" onkeydown="if(event.key==='Enter')checkAdmin('${action}')"></div>
+      <div class="btn-row"><button class="btn primary" onclick="checkAdmin('${action}')">เข้าสู่ระบบ</button></div>
+    `);
+  }
+
+  function setAdminPassword(){
+    const a=document.getElementById("newPass").value;
+    const b=document.getElementById("newPass2").value;
+    if(a.length<6)return alert("รหัสผ่านควรมีอย่างน้อย 6 ตัว");
+    if(a!==b)return alert("รหัสผ่านไม่ตรงกัน");
+    localStorage.setItem("adminPassword",a);
+    alert("ตั้งรหัสผ่านเรียบร้อย ♡");
+    closeModal();
+  }
+
+  function checkAdmin(action){
+    if(document.getElementById("adminPass").value!==localStorage.getItem("adminPassword")){
+      return alert("รหัสผ่านไม่ถูกต้อง");
+    }
+    closeModal();
+    if(action==="shop")manageShop();
+    if(action==="product")manageProducts();
+    if(action==="orders")manageOrders();
+  }
+
+  function manageShop(){
+    openModal(`
+      <h2 class="modal-title">🏠 จัดการร้าน</h2>
+      <div class="field"><label>ชื่อร้าน</label><input id="sName" value="${escapeHTML(shop.name)}"></div>
+      <div class="field"><label>คำโปรยร้าน</label><input id="sBio" value="${escapeHTML(shop.bio)}"></div>
+      <div class="field"><label>รูปโปรไฟล์ร้าน</label><input id="sAvatar" type="file" accept="image/*"></div>
+      <div class="field"><label>ธนาคาร</label><input id="sBank" value="${escapeHTML(shop.bank)}"></div>
+      <div class="row">
+        <div class="field"><label>เลขบัญชี</label><input id="sAccount" value="${escapeHTML(shop.account)}"></div>
+        <div class="field"><label>ชื่อบัญชี</label><input id="sAccountName" value="${escapeHTML(shop.accountName)}"></div>
+      </div>
+      <div class="field"><label>TrueMoney Wallet</label><input id="sWallet" value="${escapeHTML(shop.wallet)}"></div>
+      <div class="field"><label>รูป QR สำหรับชำระเงิน</label><input id="sQR" type="file" accept="image/*"></div>
+      <div class="btn-row"><button class="btn primary" onclick="saveShop()">บันทึกการตั้งค่า ♡</button></div>
+    `);
+  }
+
+  function saveShop(){
+    const avatar=document.getElementById("sAvatar").files[0];
+    const qr=document.getElementById("sQR").files[0];
+    const finish=(avatarData,qrData)=>{
+      shop={
+        ...shop,
+        name:document.getElementById("sName").value || defaultShop.name,
+        bio:document.getElementById("sBio").value,
+        bank:document.getElementById("sBank").value,
+        account:document.getElementById("sAccount").value,
+        accountName:document.getElementById("sAccountName").value,
+        wallet:document.getElementById("sWallet").value,
+        avatar:avatarData ?? shop.avatar,
+        qr:qrData ?? shop.qr
+      };
+      saveAll();init();closeModal();alert("บันทึกร้านเรียบร้อย ♡");
+    };
+    readFiles(avatar,qr,finish);
+  }
+
+  function readFiles(file1,file2,done){
+    let a=null,b=null,count=0,total=(file1?1:0)+(file2?1:0);
+    if(!total)return done(null,null);
+    const check=()=>{count++;if(count===total)done(a,b)};
+    if(file1){const r=new FileReader();r.onload=()=>{a=r.result;check()};r.readAsDataURL(file1)}
+    if(file2){const r=new FileReader();r.onload=()=>{b=r.result;check()};r.readAsDataURL(file2)}
+  }
+
+  function manageProducts(){
+    openModal(`
+      <h2 class="modal-title">🛍️ เพิ่มสินค้า</h2>
+      <div class="field"><label>ชื่อสินค้า</label><input id="pName" placeholder="เช่น Sweet Bunny"></div>
+      <div class="row">
+        <div class="field"><label>ราคา</label><input id="pPrice" type="number" min="0" placeholder="199"></div>
+        <div class="field"><label>หมวดหมู่</label><input id="pCat" placeholder="กลุ่มของแต่ง"></div>
+      </div>
+      <div class="field"><label>รายละเอียด</label><textarea id="pDesc"></textarea></div>
+      <div class="field"><label>รูปสินค้า</label><input id="pImage" type="file" accept="image/*"></div>
+      <div class="btn-row"><button class="btn primary" onclick="addProduct()">＋ เพิ่มสินค้า</button></div>
+      <hr style="border:0;border-top:1px solid #f1e2e8;margin:18px 0">
+      <h3 style="color:#a77e8e">สินค้าที่มีอยู่</h3>
+      <div>${products.map(p=>`
+        <div class="order">
+          <b>${escapeHTML(p.name)}</b> — ฿${Number(p.price).toLocaleString()}
+          <br><small>${escapeHTML(p.category)}</small>
+          <div class="order-actions">
+            <button class="btn soft" onclick="editProduct(${p.id})">แก้ไข</button>
+            <button class="btn danger" onclick="deleteProduct(${p.id})">ลบ</button>
+          </div>
+        </div>`).join("")}</div>
+    `);
+  }
+
+  function addProduct(){
+    const file=document.getElementById("pImage").files[0];
+    const finish=(image)=>{
+      const p={
+        id:Date.now(),
+        name:document.getElementById("pName").value || "สินค้าใหม่",
+        price:Number(document.getElementById("pPrice").value)||0,
+        category:document.getElementById("pCat").value || "อื่น ๆ",
+        description:document.getElementById("pDesc").value,
+        image:image || ""
+      };
+      products.push(p);saveAll();renderCategories();renderProducts();manageProducts();
+    };
+    if(file){const r=new FileReader();r.onload=()=>finish(r.result);r.readAsDataURL(file)}
+    else finish("");
+  }
+
+  function deleteProduct(id){
+    if(!confirm("ลบสินค้านี้ใช่ไหม?"))return;
+    products=products.filter(p=>p.id!==id);
+    cart=cart.filter(x=>x.id!==id);
+    saveAll();updateCartCount();renderCategories();renderProducts();manageProducts();
+  }
+
+  function editProduct(id){
+    const p=products.find(x=>x.id===id);
+    if(!p)return;
+    openModal(`
+      <h2 class="modal-title">✏️ แก้ไขสินค้า</h2>
+      <div class="field"><label>ชื่อสินค้า</label><input id="eName" value="${escapeHTML(p.name)}"></div>
+      <div class="row">
+        <div class="field"><label>ราคา</label><input id="ePrice" type="number" value="${p.price}"></div>
+        <div class="field"><label>หมวดหมู่</label><input id="eCat" value="${escapeHTML(p.category)}"></div>
+      </div>
+      <div class="field"><label>รายละเอียด</label><textarea id="eDesc">${escapeHTML(p.description)}</textarea></div>
+      <div class="field"><label>เปลี่ยนรูป</label><input id="eImage" type="file" accept="image/*"></div>
+      <div class="btn-row"><button class="btn primary" onclick="saveProductEdit(${id})">บันทึก ♡</button></div>
+    `);
+  }
+
+  function saveProductEdit(id){
+    const p=products.find(x=>x.id===id);
+    const file=document.getElementById("eImage").files[0];
+    const finish=(image)=>{
+      p.name=document.getElementById("eName").value;
+      p.price=Number(document.getElementById("ePrice").value)||0;
+      p.category=document.getElementById("eCat").value;
+      p.description=document.getElementById("eDesc").value;
+      if(image)p.image=image;
+      saveAll();renderCategories();renderProducts();manageProducts();
+    };
+    if(file){const r=new FileReader();r.onload=()=>finish(r.result);r.readAsDataURL(file)}
+    else finish(null);
+  }
+
+  function manageOrders(){
+    openModal(`
+      <h2 class="modal-title">🧾 จัดการออเดอร์</h2>
+      <div class="field">
+        <label>เรียงออเดอร์</label>
+        <select id="orderSort" onchange="renderOrdersInside()">
+          <option value="new">ใหม่ → เก่า</option>
+          <option value="old">เก่า → ใหม่</option>
+          <option value="pending">รอตรวจสอบก่อน</option>
+        </select>
+      </div>
+      <div id="ordersInside"></div>
+    `);
+    renderOrdersInside();
+  }
+
+  function renderOrdersInside(){
+    const sort=document.getElementById("orderSort").value;
+    let list=[...orders];
+    if(sort==="new")list.reverse();
+    if(sort==="pending")list.sort((a,b)=>(a.status==="รอตรวจสอบสลิป"?-1:1));
+    document.getElementById("ordersInside").innerHTML=list.length ? list.map(o=>`
+      <div class="order">
+        <div class="order-head">
+          <b>${o.id}</b>
+          <span class="status">${o.status}</span>
+        </div>
+        <div style="font-size:12px;margin-top:5px">ยอดรวม ฿${Number(o.total).toLocaleString()}</div>
+        <div style="font-size:11px;color:#ad969f">${o.createdAt}</div>
+        <div class="order-actions">
+          ${o.slip ? `<button class="btn soft" onclick="viewSlip('${o.id}')">ดูสลิป</button>`:""}
+          ${o.status==="รอตรวจสอบสลิป" ? `<button class="btn primary" onclick="verifyOrder('${o.id}')">✓ ยืนยันสลิป</button>`:""}
+          <button class="btn danger" onclick="deleteOrder('${o.id}')">ลบออเดอร์</button>
+        </div>
+      </div>`).join("") : `<div class="empty">ยังไม่มีออเดอร์ ♡</div>`;
+  }
+
+  function viewSlip(id){
+    const o=orders.find(x=>x.id===id);
+    openModal(`
+      <h2 class="modal-title">สลิป ${o.id}</h2>
+      <img src="${o.slip}" style="width:100%;max-height:60vh;object-fit:contain;border-radius:18px;background:#fff6f9">
+      <div class="btn-row"><button class="btn soft" onclick="manageOrders()">กลับ</button></div>
+    `);
+  }
+
+  function deleteOrder(id){
+    if(!confirm("ลบออเดอร์นี้ใช่ไหม?"))return;
+    orders=orders.filter(o=>o.id!==id);saveAll();manageOrders();
+  }
+
+  function verifyOrder(id){
+    const o=orders.find(x=>x.id===id);
+    if(!o)return;
+    o.status="ชำระเงินเรียบร้อย";
+    o.verifiedAt=new Date().toLocaleString("th-TH");
+    saveAll();
+    closeModal();
+    startReceiptPrinting(o);
+  }
+
+  function startReceiptPrinting(order){
+    lastReceiptOrder=order;
+    const paper=document.getElementById("paper");
+    const items=order.items.map(x=>{
+      const p=products.find(p=>p.id===x.id);
+      return p ? `<div style="display:flex;justify-content:space-between;margin:4px 0">
+        <span>${escapeHTML(p.name)} ×${x.qty}</span><span>฿${(p.price*x.qty).toLocaleString()}</span>
+      </div>`:"";
+    }).join("");
+    paper.innerHTML=`
+      <div class="paper-logo">♡ ${escapeHTML(shop.name)} ♡</div>
+      <div style="text-align:center;font-size:9px">ใบเสร็จรับเงิน</div>
+      <div class="paper-line"></div>
+      ${items}
+      <div class="paper-line"></div>
+      <div class="paper-total"><span>รวมทั้งหมด</span><span>฿${order.total.toLocaleString()}</span></div>
+      <div class="paper-line"></div>
+      <div style="font-size:8px">Order: ${order.id}</div>
+      <div style="font-size:8px">${order.createdAt}</div>
+      <div style="text-align:center;color:#d7789d;font-weight:700;margin-top:8px">♡ ชำระเงินแล้ว ♡</div>
+    `;
+    const wrap=document.getElementById("printerWrap");
+    wrap.classList.remove("printing","finished");
+    document.getElementById("receiptOverlay").classList.add("show");
+    void wrap.offsetWidth;
+    wrap.classList.add("printing");
+    setTimeout(()=>wrap.classList.add("finished"),4200);
+  }
+
+  function finishReceipt(){
+    document.getElementById("receiptOverlay").classList.remove("show");
+    showFinalReceipt(lastReceiptOrder);
+  }
+
+  function showFinalReceipt(order){
+    const items=order.items.map(x=>{
+      const p=products.find(p=>p.id===x.id);
+      return p?`<div class="total-line"><span>${escapeHTML(p.name)} ×${x.qty}</span><strong>฿${(p.price*x.qty).toLocaleString()}</strong></div>`:"";
+    }).join("");
+    openModal(`
+      <div style="text-align:center">
+        <div style="font-size:30px;color:#df7aa1">♡ ${escapeHTML(shop.name)} ♡</div>
+        <div style="font-size:12px;color:#9d8991">ใบเสร็จรับเงิน</div>
+      </div>
+      <div style="margin-top:16px">${items}</div>
+      <hr style="border:0;border-top:1px dashed #decfd6">
+      <div class="total-line grand"><span>ยอดรวม</span><strong>฿${order.total.toLocaleString()}</strong></div>
+      <hr style="border:0;border-top:1px dashed #decfd6">
+      <div style="font-size:11px;color:#9d8991">เลขที่คำสั่งซื้อ: ${order.id}</div>
+      <div style="font-size:11px;color:#9d8991">${order.createdAt}</div>
+      <div style="text-align:center;color:#d9769e;font-weight:700;margin:16px 0">✓ ตรวจสอบการชำระเงินแล้ว ♡</div>
+      <div class="btn-row"><button class="btn primary" onclick="closeModal()">กลับหน้าร้าน</button></div>
+    `);
+  }
+
+  init();
+</script>
+</body>
+</html>
+'''
+
+path = Path("/mnt/data/index.html")
+path.write_text(html, encoding="utf-8")
+print(f"สร้างไฟล์เรียบร้อย: {path}")
