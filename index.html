@@ -2541,3 +2541,198 @@ renderCart();
 
 </body>
 </html>
+/* =========================================
+   RECEIPT PRINT ANIMATION
+========================================= */
+
+.print-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(60,45,52,.45);
+    backdrop-filter:blur(6px);
+    z-index:9999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.print-overlay.show{
+    display:flex;
+}
+
+.printer-area{
+    width:340px;
+    text-align:center;
+}
+
+/* เครื่องปริ้น */
+
+.printer{
+    position:relative;
+    width:260px;
+    height:130px;
+    margin:auto;
+    background:#f4f1f2;
+    border-radius:20px;
+    box-shadow:
+        0 15px 40px rgba(50,30,40,.25);
+    padding-top:35px;
+}
+
+.printer-top{
+    position:absolute;
+    top:15px;
+    left:25px;
+    right:25px;
+    height:30px;
+    background:#d9d5d7;
+    border-radius:10px;
+}
+
+.printer-slot{
+    position:absolute;
+    top:65px;
+    left:35px;
+    right:35px;
+    height:12px;
+    background:#858084;
+    border-radius:10px;
+}
+
+/* กระดาษ */
+
+.receipt-paper{
+    position:absolute;
+    width:190px;
+    left:50%;
+    transform:translateX(-50%);
+    top:62px;
+
+    background:white;
+    border-radius:3px;
+
+    padding:18px 15px;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,.15);
+
+    text-align:left;
+
+    z-index:-1;
+
+    height:0;
+    overflow:hidden;
+}
+
+/* ตอนพิมพ์ */
+
+.printing .receipt-paper{
+    animation:printReceipt 4s ease-out forwards;
+}
+
+@keyframes printReceipt{
+
+    0%{
+        height:0;
+        top:65px;
+    }
+
+    30%{
+        height:80px;
+        top:65px;
+    }
+
+    60%{
+        height:180px;
+        top:65px;
+    }
+
+    100%{
+        height:270px;
+        top:65px;
+    }
+
+}
+
+/* ข้อความบนใบเสร็จ */
+
+.receipt-paper-content{
+    width:100%;
+    font-size:10px;
+    color:#777;
+}
+
+.receipt-logo{
+    text-align:center;
+    color:#db82a5;
+    font-size:17px;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.receipt-line{
+    border-top:1px dashed #bbb;
+    margin:8px 0;
+}
+
+.receipt-total{
+    display:flex;
+    justify-content:space-between;
+    font-weight:bold;
+    font-size:13px;
+}
+
+.receipt-status{
+    text-align:center;
+    margin-top:12px;
+    color:#db82a5;
+    font-weight:bold;
+}
+
+/* ข้อความสถานะ */
+
+.print-status{
+    color:white;
+    font-size:17px;
+    font-weight:bold;
+    margin-top:30px;
+}
+
+.print-sub{
+    color:#ffeaf2;
+    font-size:12px;
+    margin-top:7px;
+}
+
+/* เสร็จแล้ว */
+
+.print-done{
+    display:none;
+}
+
+.printing.finished .print-status{
+    display:none;
+}
+
+.printing.finished .print-sub{
+    display:none;
+}
+
+.printing.finished .print-done{
+    display:block;
+    margin-top:30px;
+    color:white;
+    font-weight:bold;
+    font-size:18px;
+}
+
+.receipt-finish-btn{
+    border:0;
+    margin-top:15px;
+    padding:13px 30px;
+    border-radius:15px;
+    background:#f39bc0;
+    color:white;
+    font-weight:bold;
+}
